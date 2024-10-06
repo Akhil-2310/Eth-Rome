@@ -41,7 +41,7 @@ const Navbar = () => {
         <div className="flex-none">
           <ul className="menu menu-horizontal px-1">
             <li>
-              <Link to="/create">Ceate Groups</Link>
+              <Link to="/create">Create Groups</Link>
             </li>
             <li>
               <w3m-button />
