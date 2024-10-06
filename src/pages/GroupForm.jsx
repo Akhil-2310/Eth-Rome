@@ -1,9 +1,13 @@
 import React, { useState } from "react";
 import { ApiSdk } from "@bandada/api-sdk";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "./supabaseClient";
 
 const apiSdk = new ApiSdk();
 
 const GroupForm = () => {
+
+    const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -21,10 +25,9 @@ const GroupForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const apiKey = "70f07d0d-6aa2-4fe1-b4b9-06c271a641dc";
 
     try {
-    //   const bandadaSDK = new BandadaApiSDK(apiKey);
+      //   const bandadaSDK = new BandadaApiSDK(apiKey);
 
       const credentials = {
         id: "BLOCKCHAIN_BALANCE",
@@ -48,9 +51,36 @@ const GroupForm = () => {
 
       console.log("Group created successfully:", group);
       // Handle successful group creation (e.g., show a success message, reset form, etc.)
+      await createGroup({
+        groupName: formData.name,
+        groupDescription: formData.description,
+        minBalance: formData.minBalance,
+        network: formData.network,
+      });
+
+      console.log("Group details saved to Supabase successfully");
+      navigate("/all")
     } catch (error) {
       console.error("Error creating group:", error);
       // Handle error (e.g., show error message to user)
+    }
+  };
+
+  // Store group and credential requirements in Supabase
+  const createGroup = async (formData) => {
+    const { data, error } = await supabase.from("groups").insert([
+      {
+        group_name: formData.groupName, // Group name
+        description: formData.groupDescription, // Group description
+        min_balance: formData.minBalance, // Minimum balance requirement
+        network: formData.network, // Blockchain network
+      },
+    ]);
+
+    if (error) {
+      console.error("Error creating group in Supabase:", error);
+    } else {
+      console.log("Group details saved to Supabase successfully:", data);
     }
   };
 
