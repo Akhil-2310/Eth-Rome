@@ -9,11 +9,13 @@ const apiSdk = new ApiSdk();
 const AllGroups = () => {
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [userAddress, setUserAddress] = useState("");
+//   const [userAddress, setUserAddress] = useState("");
   const adminId =
     "0x078ca966cb82a1b9efa8c6e8a3c5129cbbb2b768c9ae96d43805651675cccf32"; // Admin ID
 
   const navigate = useNavigate(); // Hook to navigate programmatically
+
+
 
   useEffect(() => {
     // Fetch groups by adminId when component mounts
@@ -31,81 +33,19 @@ const AllGroups = () => {
     fetchGroups();
   }, [adminId]);
 
-    const connectWallet = async () => {
-      if (window.ethereum) {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const accounts = await provider.send("eth_requestAccounts", []);
-        setUserAddress(accounts[0]); // Store user's wallet address
-      } else {
-        console.error("Ethereum provider not found");
-      }
-    };
+async function handleJoinGroup(){
+    const groupId = "97056639272218640319625972588067";
+    const memberId = "1";
+    const inviteCode =
+      "3C4UWNPE";
+      try{
+    await apiSdk.addMemberByInviteCode(groupId, memberId, inviteCode);
+alert("Successfully joined group")
+}catch(error){
+    console.error(error)
+}
+}
 
- const handleJoinGroup = async (groupId) => {
-   try {
-     const { data: groupData, error } = await supabase
-       .from("groups")
-       .select("*")
-       .eq("id", groupId)
-       .single(); // Get group details from Supabase
-
-     if (error) {
-       console.error("Error fetching group data:", error);
-       return;
-     }
-
-     const { min_balance, network } = groupData; // Extract required balance and network
-
-     // Get user's balance on the required network
-     const provider = new ethers.providers.JsonRpcProvider(
-       network === "Sepolia"
-         ? "https://rpc.sepolia.org"
-         : "https://mainnet.infura.io/v3/YOUR_INFURA_KEY"
-     );
-     const userBalance = await provider.getBalance(userAddress);
-     const formattedBalance = ethers.utils.formatEther(userBalance);
-
-     if (parseFloat(formattedBalance) < parseFloat(min_balance)) {
-       console.error("Insufficient balance to join the group");
-       return;
-     }
-
-     const credentials = {
-       id: "BLOCKCHAIN_BALANCE",
-       criteria: {
-         minBalance: min_balance,
-         network,
-       },
-     };
-
-     // Use Bandada to generate a Merkle proof
-     const proof = await apiSdk.generateMerkleProof({
-       credentialId: credentials.id,
-       criteria: credentials.criteria,
-       address: userAddress,
-     });
-
-     // Store the proof or mark the user as a member in Supabase
-     const { error: supabaseError } = await supabase
-       .from("group_members")
-       .insert({
-         group_id: groupId,
-         user_address: userAddress,
-         proof, // Store the proof for future validation
-       });
-
-     if (supabaseError) {
-       console.error(
-         "Error storing membership data in Supabase:",
-         supabaseError
-       );
-     } else {
-       console.log("User joined the group successfully!");
-     }
-   } catch (error) {
-     console.error("Error during group join process:", error);
-   }
- };
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center">
@@ -137,7 +77,7 @@ const AllGroups = () => {
                   </p>
                 </div>
                 <button
-                  onClick={() => handleJoinGroup(group.id)}
+                  onClick={() => handleJoinGroup()}
                   className="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded hover:bg-blue-700 transition duration-300"
                 >
                   Join Group
@@ -152,3 +92,5 @@ const AllGroups = () => {
 };
 
 export default AllGroups;
+
+
